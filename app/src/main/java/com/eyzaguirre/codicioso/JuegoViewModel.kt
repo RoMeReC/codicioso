@@ -13,6 +13,14 @@ import kotlinx.coroutines.flow.asStateFlow
 class JuegoViewModel : ViewModel() {
 
     private val _estado = MutableStateFlow(EstadoJuego())
+    var cantidadJugadoresEsperados: Int = 2
+        private set
+
+    private var _cantidadJugadoresEsperados: Int = 2
+        set(value) {
+            field = value
+            cantidadJugadoresEsperados = value
+        }
     val estado: StateFlow<EstadoJuego> = _estado.asStateFlow()
 
     // ── CONFIGURACIÓN ──────────────────────────────────────────
@@ -24,6 +32,12 @@ class JuegoViewModel : ViewModel() {
     }
 
     // ── REGISTRO DE JUGADORES ──────────────────────────────────
+    fun prepararRegistro(cantidadJugadores: Int) {
+        _estado.value = _estado.value.copy(
+            jugadores = emptyList()
+        )
+        _cantidadJugadoresEsperados = cantidadJugadores
+    }
 
     fun registrarDadoInicial(nombre: String, valorDado: Int) {
         val jugadoresActuales = _estado.value.jugadores.toMutableList()
