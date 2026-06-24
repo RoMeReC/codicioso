@@ -1,6 +1,7 @@
 package com.eyzaguirre.codicioso
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -21,12 +22,16 @@ object Rutas {
 }
 
 @Composable
-fun Navegacion(viewModel: JuegoViewModel) {
+fun Navegacion(
+    viewModel: JuegoViewModel,
+    modifier: Modifier = Modifier
+) {
     val navController = rememberNavController()
 
     NavHost(
         navController = navController,
-        startDestination = Rutas.CONFIGURACION
+        startDestination = Rutas.CONFIGURACION,
+        modifier = modifier
     ) {
         composable(Rutas.CONFIGURACION) {
             PantallaConfiguracion(
