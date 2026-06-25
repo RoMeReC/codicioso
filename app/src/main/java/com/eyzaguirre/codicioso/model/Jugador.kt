@@ -3,6 +3,5 @@ package com.eyzaguirre.codicioso.model
 data class Jugador(
     val id: Int,
     val nombre: String,
-    var puntajeTotal: Int = 0,
-    var dadoInicial: Int = 0
+    var puntajeTotal: Int = 0
 )

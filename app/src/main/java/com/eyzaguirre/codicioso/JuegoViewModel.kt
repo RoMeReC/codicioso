@@ -39,24 +39,20 @@ class JuegoViewModel : ViewModel() {
         _cantidadJugadoresEsperados = cantidadJugadores
     }
 
-    fun registrarDadoInicial(nombre: String, valorDado: Int) {
+    fun agregarJugador(nombre: String) {
         val jugadoresActuales = _estado.value.jugadores.toMutableList()
         val nuevoJugador = Jugador(
             id = jugadoresActuales.size + 1,
-            nombre = nombre,
-            dadoInicial = valorDado
+            nombre = nombre
         )
         jugadoresActuales.add(nuevoJugador)
         _estado.value = _estado.value.copy(jugadores = jugadoresActuales)
     }
 
-    fun ordenarJugadores() {
-        val jugadoresOrdenados = _estado.value.jugadores
-            .sortedByDescending { it.dadoInicial }
-        _estado.value = _estado.value.copy(
-            jugadores = jugadoresOrdenados,
-            turnoActual = 0
-        )
+    fun moverJugador(desde: Int, hasta: Int) {
+        val lista = _estado.value.jugadores.toMutableList()
+        lista.add(hasta, lista.removeAt(desde))
+        _estado.value = _estado.value.copy(jugadores = lista)
     }
 
     // ── TURNO ──────────────────────────────────────────────────
