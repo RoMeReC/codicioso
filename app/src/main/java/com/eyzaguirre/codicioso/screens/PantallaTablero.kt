@@ -2,6 +2,7 @@ package com.eyzaguirre.codicioso.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -82,7 +83,7 @@ fun PantallaTablero(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(jugadores) { jugador ->
+            itemsIndexed(jugadores) { indice, jugador ->
                 val esElTurno = jugador.id == jugadorActual?.id
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -103,7 +104,7 @@ fun PantallaTablero(
                         Column {
                             Text(
                                 text = jugador.nombre,
-                                fontSize = 16.sp,
+                                fontSize = 18.sp,
                                 fontWeight = if (esElTurno)
                                     FontWeight.Bold else FontWeight.Normal
                             )
@@ -116,7 +117,10 @@ fun PantallaTablero(
                             }
                         }
                         Text(
-                            text = "${jugador.puntajeTotal} pts",
+                            text = if (estado.puntajesVisibles)
+                                "${jugador.puntajeTotal} pts"
+                            else
+                                "🙈 ???",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (esElTurno)

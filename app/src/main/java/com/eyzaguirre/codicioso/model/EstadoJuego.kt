@@ -8,5 +8,7 @@ data class EstadoJuego(
     var ultimaRonda: Boolean = false,
     var jugadorQueAlcanzaLimite: Int? = null,
     var juegoFinalizado: Boolean = false,
-    var turnoEnCurso: Turno? = null
+    var turnoEnCurso: Turno? = null,
+    var modoUltimaRonda: Boolean = true,
+    var puntajesVisibles: Boolean = true
 )

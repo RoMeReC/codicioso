@@ -25,9 +25,15 @@ class JuegoViewModel : ViewModel() {
 
     // ── CONFIGURACIÓN ──────────────────────────────────────────
 
-    fun configurarJuego(puntajeLimit: Int) {
+    fun configurarJuego(
+        puntajeLimit: Int,
+        modoUltimaRonda: Boolean,
+        puntajesVisibles: Boolean
+    ) {
         _estado.value = _estado.value.copy(
-            puntajelimite = puntajeLimit
+            puntajelimite = puntajeLimit,
+            modoUltimaRonda = modoUltimaRonda,
+            puntajesVisibles = puntajesVisibles
         )
     }
 
@@ -64,43 +70,36 @@ class JuegoViewModel : ViewModel() {
         )
     }
 
-    fun registrarSeleccion(seleccion: SeleccionDados) {
+    fun registrarPuntajeLanzamiento(puntos: Int) {
         val turno = _estado.value.turnoEnCurso ?: return
-        val resultado = procesarLanzamiento(seleccion, turno.dadosDisponibles)
-
-        if (!resultado.esValido) {
-            // Turno perdido
-            _estado.value = _estado.value.copy(
-                turnoEnCurso = turno.copy(
-                    perdido = true,
-                    puntajeAcumulado = 0,
-                    finalizado = true
-                )
+        val nuevoAcumulado = turno.puntajeAcumulado + puntos
+        _estado.value = _estado.value.copy(
+            turnoEnCurso = turno.copy(
+                puntajeAcumulado = nuevoAcumulado
             )
-            return
-        }
+        )
+    }
 
-        val nuevoAcumulado = turno.puntajeAcumulado + resultado.puntos
+    fun registrarSobre() {
+        val turno = _estado.value.turnoEnCurso ?: return
+        _estado.value = _estado.value.copy(
+            turnoEnCurso = turno.copy(
+                dadosDisponibles = 10,
+                cantidadSobres = turno.cantidadSobres + 1
+            )
+        )
+    }
 
-        if (resultado.esSobre) {
-            // SOBRE: reinicia dados, suma puntos, incrementa contador
-            _estado.value = _estado.value.copy(
-                turnoEnCurso = turno.copy(
-                    puntajeAcumulado = nuevoAcumulado,
-                    dadosDisponibles = 10,
-                    cantidadSobres = turno.cantidadSobres + 1
-                )
+    fun registrarTurnoPerdido() {
+        val turno = _estado.value.turnoEnCurso ?: return
+        _estado.value = _estado.value.copy(
+            turnoEnCurso = turno.copy(
+                perdido = true,
+                puntajeAcumulado = 0,
+                finalizado = true
             )
-        } else {
-            // Lanzamiento normal: reduce dados disponibles
-            val dadosRestantes = turno.dadosDisponibles - resultado.dadosUsados
-            _estado.value = _estado.value.copy(
-                turnoEnCurso = turno.copy(
-                    puntajeAcumulado = nuevoAcumulado,
-                    dadosDisponibles = dadosRestantes
-                )
-            )
-        }
+        )
+        cerrarTurno()
     }
 
     fun plantarse() {
@@ -124,25 +123,30 @@ class JuegoViewModel : ViewModel() {
 
         // Verificar si alguien alcanzó el límite
         val limite = _estado.value.puntajelimite
+        val modoUltimaRonda = _estado.value.modoUltimaRonda
         val alcanzoLimite = jugadores.find { it.puntajeTotal >= limite }
 
         var ultimaRonda = _estado.value.ultimaRonda
         var jugadorQueAlcanza = _estado.value.jugadorQueAlcanzaLimite
+        var juegoFinalizado = false
 
         if (alcanzoLimite != null && !ultimaRonda) {
-            ultimaRonda = true
-            jugadorQueAlcanza = alcanzoLimite.id
+            if (modoUltimaRonda) {
+                ultimaRonda = true
+                jugadorQueAlcanza = alcanzoLimite.id
+            } else {
+                juegoFinalizado = true
+            }
         }
 
         // Pasar al siguiente jugador
         val totalJugadores = jugadores.size
         val siguienteTurno = (_estado.value.turnoActual + 1) % totalJugadores
         var nuevaRonda = _estado.value.rondaActual
-        var juegoFinalizado = false
 
         if (siguienteTurno == 0) {
             nuevaRonda++
-            if (ultimaRonda) {
+            if (ultimaRonda && !juegoFinalizado) {
                 juegoFinalizado = true
             }
         }
