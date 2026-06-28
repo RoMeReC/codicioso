@@ -172,4 +172,11 @@ class JuegoViewModel : ViewModel() {
     fun reiniciarJuego() {
         _estado.value = EstadoJuego()
     }
+
+    fun finalizarJuegoAhora() {
+        _estado.value = _estado.value.copy(
+            juegoFinalizado = true,
+            turnoEnCurso = null
+        )
+    }
 }

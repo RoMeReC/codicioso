@@ -12,6 +12,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.eyzaguirre.codicioso.JuegoViewModel
+import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.unit.sp
+import com.eyzaguirre.codicioso.ui.theme.AmarilloFiesta
+import com.eyzaguirre.codicioso.ui.theme.FondoTarjeta
+import com.eyzaguirre.codicioso.ui.theme.NaranjaAlerta
+import com.eyzaguirre.codicioso.ui.theme.RojoCodicioso
+import com.eyzaguirre.codicioso.ui.theme.RojoOscuro
+import com.eyzaguirre.codicioso.ui.theme.TextoBlanco
+import com.eyzaguirre.codicioso.ui.theme.TextoGrisClaro
+import com.eyzaguirre.codicioso.ui.theme.VerdeExito
 
 @Composable
 fun PantallaTablero(
@@ -22,6 +36,8 @@ fun PantallaTablero(
     val estado by viewModel.estado.collectAsState()
     val jugadores = estado.jugadores
     val jugadorActual = viewModel.jugadorEnTurno()
+    var mostrarConfirmacionFinalizar by remember { mutableStateOf(false) }
+
 
     LaunchedEffect(estado.juegoFinalizado) {
         if (estado.juegoFinalizado) onJuegoFinalizado()
@@ -144,7 +160,7 @@ fun PantallaTablero(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Botón iniciar turno
+        // Botón iniciar turno (ya existente)
         if (jugadorActual != null) {
             Button(
                 onClick = {
@@ -161,5 +177,123 @@ fun PantallaTablero(
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Botón finalizar juego anticipado
+        OutlinedButton(
+            onClick = { mostrarConfirmacionFinalizar = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error
+            ),
+            border = androidx.compose.foundation.BorderStroke(
+                2.dp, MaterialTheme.colorScheme.error
+            )
+        ) {
+            Text(
+                text = "⛔ Finalizar juego ahora",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+    if (mostrarConfirmacionFinalizar) {
+        AlertDialog(
+            onDismissRequest = { mostrarConfirmacionFinalizar = false },
+            containerColor = FondoTarjeta,
+            title = {
+                Text(
+                    text = "⛔ ¿Finalizar el juego?",
+                    color = NaranjaAlerta,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Se mostrarán los puntajes actuales y el juego terminará.",
+                        color = TextoBlanco,
+                        fontSize = 16.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Puntajes actuales:",
+                        color = AmarilloFiesta,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    estado.jugadores
+                        .sortedByDescending { it.puntajeTotal }
+                        .forEachIndexed { indice, jugador ->
+                            val medallas = listOf("🥇", "🥈", "🥉")
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "${medallas.getOrElse(indice) {
+                                        "${indice + 1}."
+                                    }} ${jugador.nombre}",
+                                    color = TextoBlanco,
+                                    fontSize = 15.sp
+                                )
+                                Text(
+                                    text = "${jugador.puntajeTotal} pts",
+                                    color = AmarilloFiesta,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
+                            }
+                        }
+                }
+            },
+            confirmButton = {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(RojoCodicioso, RojoOscuro)
+                            )
+                        )
+                ) {
+                    TextButton(
+                        onClick = {
+                            mostrarConfirmacionFinalizar = false
+                            viewModel.finalizarJuegoAhora()
+                            onJuegoFinalizado()
+                        }
+                    ) {
+                        Text(
+                            "⛔ Sí, finalizar",
+                            color = TextoBlanco,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { mostrarConfirmacionFinalizar = false },
+                    border = androidx.compose.foundation.BorderStroke(
+                        2.dp, VerdeExito
+                    )
+                ) {
+                    Text(
+                        "🎲 Seguir jugando",
+                        color = VerdeExito,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        )
     }
 }
