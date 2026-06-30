@@ -1,21 +1,18 @@
 package com.eyzaguirre.codicioso.ui.screens
 
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import com.eyzaguirre.codicioso.JuegoViewModel
 
 @Composable
@@ -30,10 +27,6 @@ fun PantallaRegistroJugadores(
     val jugadoresRegistrados = estado.jugadores
     val totalEsperados = viewModel.cantidadJugadoresEsperados
     val todosRegistrados = jugadoresRegistrados.size == totalEsperados
-
-    // Estado para drag & drop
-    var draggingIndex by remember { mutableStateOf(-1) }
-    var targetIndex by remember { mutableStateOf(-1) }
 
     Column(
         modifier = Modifier
@@ -59,7 +52,7 @@ fun PantallaRegistroJugadores(
             )
         } else {
             Text(
-                text = "Mantén presionado el ícono ≡ y arrastra para cambiar el orden",
+                text = "Usa ↑↓ para ajustar el orden de juego",
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -126,102 +119,86 @@ fun PantallaRegistroJugadores(
             Spacer(modifier = Modifier.height(8.dp))
 
             LazyColumn(modifier = Modifier.weight(1f)) {
-                itemsIndexed(
-                    jugadoresRegistrados,
-                    key = { _, jugador -> jugador.id }
-                ) { indice, jugador ->
-                    val isDragging = draggingIndex == indice
-                    val isTarget = targetIndex == indice
-
+                itemsIndexed(jugadoresRegistrados) { indice, jugador ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .zIndex(if (isDragging) 1f else 0f)
-                            .graphicsLayer {
-                                alpha = if (isDragging) 0.7f else 1f
-                                scaleX = if (isDragging) 1.03f else 1f
-                                scaleY = if (isDragging) 1.03f else 1f
-                            },
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation = if (isDragging) 8.dp else 2.dp
-                        ),
+                            .padding(vertical = 4.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = when {
-                                isDragging -> MaterialTheme.colorScheme.primaryContainer
-                                isTarget -> MaterialTheme.colorScheme.secondaryContainer
-                                else -> MaterialTheme.colorScheme.surfaceVariant
-                            }
+                            containerColor = if (indice == 0)
+                                MaterialTheme.colorScheme.primaryContainer
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant
                         )
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.DragHandle,
-                                    contentDescription = "Arrastrar",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.pointerInput(indice) {
-                                        detectDragGesturesAfterLongPress(
-                                            onDragStart = {
-                                                draggingIndex = indice
-                                                targetIndex = indice
-                                            },
-                                            onDrag = { change, dragAmount ->
-                                                change.consume()
-                                                val itemHeightPx = 80.dp.toPx()
-                                                val newTarget = (targetIndex +
-                                                        (dragAmount.y / itemHeightPx)
-                                                            .toInt())
-                                                    .coerceIn(
-                                                        0,
-                                                        jugadoresRegistrados.size - 1
-                                                    )
-                                                if (newTarget != targetIndex) {
-                                                    targetIndex = newTarget
-                                                }
-                                            },
-                                            onDragEnd = {
-                                                if (draggingIndex != -1 &&
-                                                    targetIndex != -1 &&
-                                                    draggingIndex != targetIndex
-                                                ) {
-                                                    viewModel.moverJugador(
-                                                        draggingIndex,
-                                                        targetIndex
-                                                    )
-                                                }
-                                                draggingIndex = -1
-                                                targetIndex = -1
-                                            },
-                                            onDragCancel = {
-                                                draggingIndex = -1
-                                                targetIndex = -1
-                                            }
-                                        )
-                                    }
-                                )
                                 Text(
-                                    text = "${indice + 1}. ${jugador.nombre}",
-                                    fontSize = 16.sp,
-                                    fontWeight = if (isDragging)
-                                        FontWeight.Bold else FontWeight.Normal
+                                    text = "${indice + 1}.",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
+                                Column {
+                                    Text(
+                                        text = jugador.nombre,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = if (indice == 0) "Inicia el juego" else "Turno ${indice + 1}",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
-                            Text(
-                                text = if (indice == 0) "Inicia" else "Sigue",
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold
-                            )
+
+                            // Botones subir/bajar
+                            Row {
+                                IconButton(
+                                    onClick = {
+                                        if (indice > 0) {
+                                            viewModel.moverJugador(indice, indice - 1)
+                                        }
+                                    },
+                                    enabled = indice > 0
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.KeyboardArrowUp,
+                                        contentDescription = "Subir",
+                                        tint = if (indice > 0)
+                                            MaterialTheme.colorScheme.primary
+                                        else
+                                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                                    )
+                                }
+                                IconButton(
+                                    onClick = {
+                                        if (indice < jugadoresRegistrados.size - 1) {
+                                            viewModel.moverJugador(indice, indice + 1)
+                                        }
+                                    },
+                                    enabled = indice < jugadoresRegistrados.size - 1
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.KeyboardArrowDown,
+                                        contentDescription = "Bajar",
+                                        tint = if (indice < jugadoresRegistrados.size - 1)
+                                            MaterialTheme.colorScheme.primary
+                                        else
+                                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
